@@ -1,0 +1,30 @@
+#! /bin/bash
+#
+#$Author$
+#$Date$
+#$HeadURL$
+#$Revision$
+
+while read line
+do
+    sta=$(svn status $line | head -c 1)
+    if [[ $sta == "?" && -e $line ]]
+    then
+        if [[ ! -x $line ]]
+        then
+            echo "Would you like to make $line executable?"
+            read decision
+            [[ $decision == "y" ]] && chmod +x $line
+        fi
+        svn add $line
+    elif [[ ! -e $line ]]
+    then 
+        echo "Error: File $line appears to not exist here or in svn"
+    elif [[ $status == "" && ! -x $line ]]
+    then
+        svn propset svn:executable ON $line
+    fi
+done < file_list
+svn commit
+echo "Auto-commiting code"
+exit 0

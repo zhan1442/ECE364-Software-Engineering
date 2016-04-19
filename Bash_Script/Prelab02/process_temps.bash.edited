@@ -1,0 +1,39 @@
+#! /bin/bash
+#
+#$Author$
+#$Date$
+#$HeadURL$
+#$Revision$
+
+[[ $# != 1 ]] && echo "usage: process_temps.bash <input file>" && exit 1
+
+[[ ! -r $1 ]] && echo "Error: $1 is not a readable file." && exit 2
+
+exec 3< $1
+read line <&3
+while read line #t data
+do
+<<<<<<< .mine
+    arr=($data)
+    num=${#arr[*]}
+    tot=0
+    for i in ${arr[*]}
+    do
+        ((tot += i))
+    done
+    ((avg = tot / num))
+    echo "Average temperature for time $t was $avg C."
+=======
+    t=$(echo $line | cut -d $"\t" -f1)
+    echo $t : $data
+    #arr=($data)
+    #num=${#arr[*]}
+    #tot=0
+    #for i in ${arr[*]}
+    #do
+    #    ((tot += i))
+    #done
+    #((avg = tot / num))
+    #echo "Average temperature for time $t was $avg C."
+>>>>>>> .r86840
+done <&3

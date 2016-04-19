@@ -1,0 +1,10 @@
+#! /bin/bash
+#
+#$Author$
+#$Date$
+#$HeadURL$
+#$Revision$
+
+[[ $# != 1 ]] && echo "usage: .bash <filename>" && exit 1
+
+[[ ! -r $1 ]] && echo "$1 is not readable" && exit 2

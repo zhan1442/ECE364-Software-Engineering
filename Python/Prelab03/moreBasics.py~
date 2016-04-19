@@ -1,0 +1,113 @@
+#! /usr/bin/env python3.4
+
+def getAverage(l):
+    if type(l) != list:
+        return None
+    if not len(l):
+        return None
+    return sum(l) / len(l)
+
+def getHeadAverage(l, n):
+    return sum(l, n) / n
+
+def getTailMax(l, m):
+    return max(l[-m:])
+
+def getNumberAverage(l):
+    num_sum = 0
+    n = 0
+    for item in l:
+        if type(item) is int:
+            num_sum += item
+            n += 1
+    return num_sum / n
+
+def getNumberAverage(l):
+    num_sum = 0
+    n = 0
+    for item in l:
+        if type(item) is int:
+            num_sum += item
+            n += 1
+    return num_sum / n
+
+def rectifySignal(l):
+    for i in l:
+        if type(i) == str:
+            return None
+    if l == []:
+        return None
+    if type(l) is str:
+        return None
+    for i in range(len(l)):
+        if l[i] < 0:
+            l[i] = 0
+    return l
+
+def getPairwiseDifference(vec):
+    for i in vec:
+        if type(i) is not int:
+            return None
+    if vec == []:
+        return None
+    diff_list = []
+    for ind in range(1, len(vec)):
+        diff_list.append(vec[ind] - vec[ind - 1])
+    return diff_list
+
+def getCreditCard(s):
+    if not len(s):
+        return None
+    num_list = []
+    for c in s:
+        if c.isdigit():
+            num_list.append(int(c))
+    return num_list
+
+def decodeNumbers(l):
+    pass
+
+def getLongestWord(s):
+    if type(s) is not str:
+        return None
+    if len(s.split()) <= 1:
+        return None
+    return max(s.split(), key=len)
+
+def floatRange(sta, end, stp):
+    if sta >= end:
+        return None
+    float_list = []
+    num = float(sta)
+    while num <= end:
+        float_list.append(num)
+        num = round(num + stp, 1)
+    return float_list
+
+def partition(vec, n):
+    if type(vec) is not list:
+        return None
+    if vec == []:
+        return None
+    pa_list = []
+    i = 0
+    while i+n <= len(vec):
+        a = []
+        this_end = i + n
+        while i < this_end:
+            a.append(vec[i])
+            i += 1
+        pa_list.append(a)
+    a = []
+    if i < len(vec):
+        while i < len(vec):
+            a.append(vec[i])
+            i += 1
+        pa_list.append(a)
+    return pa_list
+
+
+
+if __name__ == "__main__":
+    a = [6, 5, 4, 3, 2, 1]
+    getNumberAverage(a)

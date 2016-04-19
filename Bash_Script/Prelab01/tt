@@ -1,0 +1,14 @@
+#! /bin/bash
+#
+#$Author$
+#$Date$
+#$HeadURL$
+#$Revision$
+
+for i in {1..10}
+do
+    printf "$i Enter command: "
+    read com
+    [[ $com == "quit" ]] && exit 0
+    echo -n $(echo "ab cd ef" | cut -d " " -f 1) $com
+done

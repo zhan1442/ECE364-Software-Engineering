@@ -1,0 +1,13 @@
+#! /bin/bash
+#
+#$Author$
+#$Date$
+#$HeadURL$
+#$Revision$
+
+for val in $@
+do
+    ((sum =$sum+$val))
+done
+echo $sum
+exit 0

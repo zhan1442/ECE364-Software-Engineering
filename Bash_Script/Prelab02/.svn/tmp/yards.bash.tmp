@@ -1,0 +1,63 @@
+<<<<<<< .mine
+#! /bin/bash
+#
+#$Author$
+#$Date$
+#$HeadURL$
+#$Revision$
+
+[[ $# != 1 ]] && echo "usage: yards.bash <filename>" && exit 1
+
+[[ ! -r $1 ]] && echo "$1 is not readable" && exit 2 
+
+while read line #
+do
+    name=$(echo $line | cut -d " " -f1)
+    arr=($(echo $line | cut -d " " -f2-))
+    num=${#arr[*]}
+    tot=0
+    totvar=0
+    for i in ${arr[*]}
+    do
+        ((tot += i))
+    done
+    ((avg = tot / num))
+    for i in ${arr[*]}
+    do
+        ((totvar += (i - avg)*(i - avg)))
+    done
+    ((var = totvar / num))
+    echo "$name schools averaged $avg yards receiving with a variance of $var"
+done < $1
+=======
+#! /bin/bash
+#
+#$Author$
+#$Date$
+#$HeadURL$
+#$Revision$
+
+(( ! $# == 1 )) && echo "usage: yards.bash <filename>" && exit 1
+
+[[ ! -r $1 ]] && echo "$1 is not readable" && exit 2
+
+while read line
+do
+    name=$(echo $line | cut -d " " -f1)
+    arr=($(echo $line | cut -d " " -f2-))
+    num=${#arr[*]}
+    tot=0
+    totvar=0
+    for i in ${arr[*]}
+    do
+        ((tot += i))
+    done
+    ((avg = tot / num))
+    for i in ${arr[*]}
+    do
+        ((totvar += (i - avg)*(i - avg)))
+    done
+    ((var = totvar / num))
+    echo "$name schools averaged $avg yards receiving with a variance of $var"
+done < $1
+>>>>>>> .r86857

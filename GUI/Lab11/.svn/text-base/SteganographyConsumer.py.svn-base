@@ -1,0 +1,187 @@
+import sys
+from functools import partial
+from os.path import splitext
+from SteganographyGUI import *
+from PySide.QtCore import *
+from PySide.QtGui import *
+from Steganography import *
+from scipy.misc import *
+
+class SteganographyConsumer(QMainWindow, Ui_MainWindow):
+
+    def __init__(self, parent=None):
+        super(SteganographyConsumer, self).__init__(parent)
+        self.setupUi(self)
+
+        self.pay1 = None
+        self.carrier1 = None
+        self.carrier2 = None
+        self.dir = ""
+
+        # Get the views that are required to have the drag-and-drop enabled.
+        views = [self.viewPayload1, self.viewCarrier1, self.viewCarrier2]
+        accept = lambda e: e.accept()
+
+        for view in views:
+            # We need to accept the drag event to be able to accept the drop.
+            view.dragEnterEvent = accept
+            view.dragMoveEvent = accept
+            view.dragLeaveEvent = accept
+
+            # Assign an event handler (a method,) to be invoked when a drop is performed.
+            view.dropEvent = partial(self.processDrop, view)
+
+        self.chkApplyCompression.stateChanged.connect(self.Chk_compressbox_changed)
+        self.chkOverride.stateChanged.connect(self.Chk_overridebox_changed)
+        self.slideCompression.valueChanged.connect(self.Slider_moved)
+        self.btnSave.clicked.connect(self.Save)
+
+        self.btnExtract.clicked.connect(self.Extract)
+        self.btnClean.clicked.connect(self.Clean)
+
+        # NOTE: The line above links "all" views to the same function, and passes the view as a parameter in the
+        # function. You could pass more than one widget to the function by adding more parameters to the signature,
+        # in case you want to bind more than one widget together. you can even pass in another function, as a parameter,
+        # which might significantly reduce the size of your code. Finally, if you prefer to have a separate function
+        # for each view, where the view name is, say, "someView", you will need to:
+        # 1- Create a function with a definition similar: funcName(self, e)
+        # 2- Assign the function to be invoked as the event handler:
+        #   self.someView.dropEvent = self.funcName
+
+    def processDrop(self, view, e):
+        """
+        Process a drop event when it occurs on the views.
+        """
+        mime = e.mimeData()
+
+        # Guard against types of drops that are not pertinent to this app.
+        if not mime.hasUrls():
+            return
+
+        # Obtain the file path using the OS format.
+        filePath = mime.urls()[0].toLocalFile()
+        _, ext = splitext(filePath)
+
+        if not ext == ".png":
+            return
+
+        # show the picture in view
+        scene = QGraphicsScene()
+
+        pic = QPixmap(filePath)
+        pic = pic.scaled(view.width()-2, view.height()-2, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        scene.addPixmap(pic)
+        view.setScene(scene)
+        view.show()
+
+        # set payload and carrier
+        if view == self.viewPayload1:
+            self.pay1 = Payload(imread(filePath))
+            self.txtPayloadSize.setText(str(len(self.pay1.xml)))
+            self.slideCompression.setValue(0)
+            self.chkApplyCompression.setCheckState(Qt.Unchecked)
+
+        elif view == self.viewCarrier1:
+            self.carrier1 = Carrier(imread(filePath))
+            self.txtCarrierSize.setText(str(int(self.carrier1.img.size/8)))
+            self.chkOverride.setCheckState(Qt.Unchecked)
+            if self.carrier1.payloadExists():
+                self.lblPayloadFound.setText(">>>> Payload Found <<<<")
+                self.lblPayloadFound.setVisible(True)
+                self.chkOverride.setEnabled(True)
+            else:
+                self.lblPayloadFound.setVisible(False)
+                self.chkOverride.setEnabled(False)
+        elif view == self.viewCarrier2:
+            self.carrier2 = Carrier(imread(filePath))
+            if self.carrier2.payloadExists():
+                self.btnExtract.setEnabled(True)
+                self.btnClean.setEnabled(True)
+                self.lblCarrierEmpty.setVisible(False)
+                self.dir = filePath
+            else:
+                self.lblCarrierEmpty.setText(">>>> Carrier Empty <<<<")
+                self.lblCarrierEmpty.setVisible(True)
+                self.btnExtract.setEnabled(False)
+                self.btnClean.setEnabled(False)
+            self.viewPayload2.setScene(QGraphicsScene())
+
+        self.Check_satisfy()
+
+    def Extract(self):
+        imsave('wtf!@#$%.png', self.carrier2.extractPayload().img)
+        scene = QGraphicsScene()
+        pic = QPixmap('wtf!@#$%.png')
+        pic = pic.scaled(self.viewPayload2.width()-2,self.viewPayload2.height()-2,Qt.KeepAspectRatio,Qt.SmoothTransformation)
+        scene.addPixmap(pic)
+        self.viewPayload2.setScene(scene)
+        self.viewPayload2.show()
+
+    def Chk_compressbox_changed(self):
+        if self.chkApplyCompression.isChecked():
+            self.lblLevel.setEnabled(True)
+            self.slideCompression.setEnabled(True)
+            self.txtCompression.setEnabled(True)
+            # update payload size
+            if self.pay1 is not None:
+                self.pay1 = Payload(self.pay1.img, int(self.txtCompression.text()))
+                self.txtPayloadSize.setText(str(len(self.pay1.xml)))
+        else:
+            self.lblLevel.setEnabled(False)
+            self.slideCompression.setEnabled(False)
+            self.txtCompression.setEnabled(False)
+            # update payload size
+            if self.pay1 is not None:
+                self.pay1 = Payload(self.pay1.img)
+                self.txtPayloadSize.setText(str(len(self.pay1.xml)))
+
+        self.Check_satisfy()
+
+    def Chk_overridebox_changed(self):
+        self.Check_satisfy()
+
+
+    def Slider_moved(self):
+        self.txtCompression.setText(str(self.slideCompression.value()))
+        if self.pay1 is not None:
+            self.pay1 = Payload(self.pay1.img, int(self.txtCompression.text()))
+            self.txtPayloadSize.setText(str(len(self.pay1.xml)))
+            self.Check_satisfy()
+
+    def Check_satisfy(self):
+        if self.pay1 is None or self.carrier1 is None:
+            self.btnSave.setEnabled(False)
+            return
+        if int(self.txtPayloadSize.text()) > int(self.txtCarrierSize.text()):
+            self.btnSave.setEnabled(False)
+            return
+        if self.carrier1.payloadExists():
+            if not self.chkOverride.isChecked():
+                self.btnSave.setEnabled(False)
+                return
+        self.btnSave.setEnabled(True)
+
+    def Save(self):
+        savePath, _ = QFileDialog.getSaveFileName(self, caption="Save Image")
+        name, ext = splitext(savePath)
+        if not ext == ".png":
+            savePath = name + ".png"
+        try:
+            imsave(savePath, self.carrier1.embedPayload(self.pay1,override=True))
+        except:
+            pass
+
+    def Clean(self):
+        imsave(self.dir, self.carrier2.clean())
+        self.lblCarrierEmpty.setText(">>>> Carrier Empty <<<<")
+        self.lblCarrierEmpty.setVisible(True)
+        self.btnExtract.setEnabled(False)
+        self.btnClean.setEnabled(False)
+        self.viewPayload2.setScene(QGraphicsScene())
+
+if __name__ == "__main__":
+    currentApp = QApplication(sys.argv)
+    currentForm = SteganographyConsumer()
+    currentForm.show()
+    currentApp.exec_()

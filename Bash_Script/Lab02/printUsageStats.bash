@@ -1,0 +1,84 @@
+#! /bin/bash
+#
+#$Author: ee364c07 $
+#$Date: 2016-01-26 17:02:19 -0500 (Tue, 26 Jan 2016) $
+#$HeadURL: svn+ssh://ece364sv@ecegrid-thin1/home/ecegrid/a/ece364sv/svn/S16/students/ee364c07/Lab02/printUsageStats.bash $
+#$Revision: 86973 $
+
+[[ $# != 1 ]] && echo "Usage: ./printUsageStats.bash <input file>" && exit 1
+
+[[ ! -e $1 ]] && echo "Error: $1 does not exist" && exit 2
+
+t=$(head -n 1 $1 | cut -d ' ' -f 3)
+echo Parsing file "$1". Timestamp: $t
+
+echo "Your choices are:"
+echo "1) Active user IDs"
+echo "2) N Highest CPU usages"
+echo "3) N Highest mem usages"
+echo "4) Top 3 longest running processes"
+echo "5) All processes by a specific user"
+echo "6) Exiti"
+echo
+
+while true
+do
+    read -p "Please enter your choice: " choice
+    if [[ $choice == "1" ]]
+    then
+        printf "Total number of active user IDs: "
+        head -n 1 $1 | cut -d ',' -f 3 | cut -d ' ' -f 2
+        echo
+    elif [[ $choice == "2" ]]
+    then
+        read -p "Enter a value for N: " N
+        user=$(tail -n +8 $1 | sort -n -r -k 9 | head -n $N | cut -d " " -f 2)
+        cpu=($(tail -n +8 $1 | sort -n -r -k 9 | head -n $N | cut -d " " -f 9))
+        i=0
+        for u in $user
+        do
+            echo User $u is utilizing CPU resouces at ${cpu[i]}%
+            ((i++))
+        done
+        echo    
+    elif [[ $choice == "3" ]]
+    then
+        read -p "Enter a value for N: " N
+        user=$(tail -n +8 $1 | sort -n -r -k 10 | head -n $N | cut -d " " -f 2)
+        mem=($(tail -n +8 $1 | sort -n -r -k 10 | head -n $N | cut -d " " -f 10)) #tail -n +8 start from line 8
+        i=0
+        for u in $user
+        do
+            echo User $u is utilizing mem resouces at ${mem[i]}%
+            ((i++))    
+        done
+        echo
+    elif [[ $choice == "4" ]]
+    then
+        pid=$(tail -n +8 $1 | sort -n -t ' ' -rk 11 | head -n 3 | cut -d " " -f 1)
+        task=($(tail -n +8 $1 | sort -n -t ' ' -rk 11 | head -n 3 | cut -d " " -f 12))
+        i=0
+        for p in $pid
+        do
+            echo PID:$p, cmd: ${task[i]}
+            ((i++))
+        done
+        echo
+    elif [[ $choice == "5" ]]
+    then
+        read -p "Enter a valid user name: " us
+        grep -w $us $1 | cut -d " " -f 9,12
+        num=($(grep -w $us $1 | cut -d " " -f 9,12))
+        if [[ ${#num[*]} == 0 ]]
+        then
+            echo No match found
+        fi
+        echo
+    elif [[ $choice == "6" ]]
+    then
+        exit 0
+    else
+        echo "Error"
+    fi
+done
+
